@@ -14,6 +14,8 @@ class Client
     /** @var AuthInterface */
     protected $auth;
 
+    protected $curlOptions = [];
+
     public function __construct($baseUrl, AuthInterface $auth)
     {
         $this->baseUrl = $baseUrl;
@@ -22,8 +24,7 @@ class Client
 
     public function get($resource, $query = array())
     {
-        $curl = new Curl();
-        $browser = new Browser($curl);
+        $browser = $this->getBrowserInstance();
 
         $url = $this->baseUrl . $resource;
         if(sizeof($query) > 0) {
@@ -47,8 +48,7 @@ class Client
 
     public function post($resource, $content)
     {
-        $curl = new Curl();
-        $browser = new Browser($curl);
+        $browser = $this->getBrowserInstance();
 
         $url = $this->baseUrl . $resource;
 
@@ -68,8 +68,7 @@ class Client
 
     public function put($resource, $content)
     {
-        $curl = new Curl();
-        $browser = new Browser($curl);
+        $browser = $this->getBrowserInstance();
 
         $url = $this->baseUrl . $resource;
 
@@ -85,5 +84,32 @@ class Client
         }
 
         return json_decode($response->getContent(), true);
+    }
+
+    public function getCurlOptions()
+    {
+        return (array) $this->curlOptions;
+    }
+
+    public function setCurlOptions( array $options )
+    {
+        $this->curlOptions = $options;
+    }
+
+    protected function getCurlInstance()
+    {
+        $curl = new Curl();
+
+        foreach( $this->getCurlOptions() as $option => $value )
+        {
+            $curl->setOption( $option, $value );
+        }
+
+        return $curl;
+    }
+
+    protected function getBrowserInstance()
+    {
+        return new Browser( $this->getCurlInstance() );
     }
 } 
