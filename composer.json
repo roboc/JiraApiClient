@@ -1,8 +1,8 @@
 {
-    "name": "gorkalaucirica/jira-api-client",
+    "name": "roboc/jira-api-client",
     "description": "JIRA API client",
     "keywords": ["jira","api","library","client"],
-    "homepage": "https://github.com/gorkalaucirica/JiraApiClient",
+    "homepage": "https://github.com/roboc/JiraApiClient",
     "type": "library",
     "license": "MIT",
     "authors": [
