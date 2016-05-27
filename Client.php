@@ -11,15 +11,13 @@ class Client
 {
     protected $baseUrl;
 
-    /** @var AuthInterface */
-    protected $auth;
-
     protected $curlOptions = [];
 
-    public function __construct($baseUrl, AuthInterface $auth)
+    protected $browser;
+
+    public function __construct( $baseUrl )
     {
         $this->baseUrl = $baseUrl;
-        $this->auth = $auth;
     }
 
     public function get($resource, $query = array())
@@ -27,7 +25,7 @@ class Client
         $browser = $this->getBrowserInstance();
 
         $url = $this->baseUrl . $resource;
-        if(sizeof($query) > 0) {
+        if(count($query) > 0) {
             $url .= "?";
         }
 
@@ -35,9 +33,7 @@ class Client
             $url .= "$key=$value&";
         }
 
-        $headers = array("Authorization" => $this->auth->getCredential());
-
-        $response = $browser->get($url, $headers);
+        $response = $browser->get($url);
 
         if($browser->getLastResponse()->getStatusCode() != 200) {
             throw new BadRequestException();
@@ -54,7 +50,6 @@ class Client
 
         $headers = array(
             'Content-Type' => 'application/json',
-            'Authorization' => $this->auth->getCredential()
         );
 
         $response = $browser->post($url, $headers, json_encode($content));
@@ -74,7 +69,6 @@ class Client
 
         $headers = array(
             'Content-Type' => 'application/json',
-            'Authorization' => $this->auth->getCredential()
         );
 
         $response = $browser->put($url, $headers, json_encode($content));
@@ -110,6 +104,11 @@ class Client
 
     protected function getBrowserInstance()
     {
-        return new Browser( $this->getCurlInstance() );
+        if( $this->browser === null )
+        {
+            $this->browser = new Browser( $this->getCurlInstance() );
+        }
+
+        return $this->browser;
     }
 } 
