@@ -2,8 +2,6 @@
 
 namespace GorkaLaucirica\JiraApiClient;
 
-use Buzz\Browser;
-use Buzz\Client\Curl;
 use GorkaLaucirica\JiraApiClient\Auth\AuthInterface;
 use GorkaLaucirica\JiraApiClient\Exception\BadRequestException;
 use GuzzleHttp\Exception\ClientException;
