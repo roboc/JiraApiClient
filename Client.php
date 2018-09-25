@@ -6,12 +6,13 @@ use Buzz\Browser;
 use Buzz\Client\Curl;
 use GorkaLaucirica\JiraApiClient\Auth\AuthInterface;
 use GorkaLaucirica\JiraApiClient\Exception\BadRequestException;
+use GuzzleHttp\Exception\ClientException;
 
 class Client
 {
     protected $baseUrl;
 
-    protected $curlOptions = [];
+    protected $requestOptions = [];
 
     protected $browser;
 
@@ -25,6 +26,7 @@ class Client
         $browser = $this->getBrowserInstance();
 
         $url = $this->baseUrl . $resource;
+
         if(count($query) > 0) {
             $url .= "?";
         }
@@ -33,13 +35,17 @@ class Client
             $url .= "$key=$value&";
         }
 
-        $response = $browser->get($url);
-
-        if($browser->getLastResponse()->getStatusCode() != 200) {
-            throw new BadRequestException( $url . ': ' .(string) $browser->getLastResponse()->getContent() );
+        try {
+            $response = $browser->get($url, $this->getRequestOptions());
+        } catch (ClientException $e) {
+            throw new BadRequestException($e->getMessage());
         }
 
-        return json_decode($response->getContent(), true);
+        if ($response->getStatusCode() != 200) {
+            throw new BadRequestException($url . ': ' . (string)$response->getBody());
+        }
+
+        return json_decode($response->getBody(), true);
     }
 
     public function post($resource, $content)
@@ -48,17 +54,19 @@ class Client
 
         $url = $this->baseUrl . $resource;
 
-        $headers = array(
+        $options = $this->getRequestOptions();
+        $options['body'] = json_encode($content);
+        $options['headers'] = [
             'Content-Type' => 'application/json',
-        );
+        ];
 
-        $response = $browser->post($url, $headers, json_encode($content));
+        $response = $browser->post($url, $options);
 
-        if($browser->getLastResponse()->getStatusCode() > 299) {
-            throw new BadRequestException($response);
+        if($response->getStatusCode() > 299) {
+            throw new BadRequestException($url . ': ' . (string)$response->getBody());
         }
 
-        return json_decode($response->getContent(), true);
+        return json_decode($response->getBody(), true);
     }
 
     public function put($resource, $content)
@@ -67,48 +75,38 @@ class Client
 
         $url = $this->baseUrl . $resource;
 
-        $headers = array(
+        $options = $this->getRequestOptions();
+        $options['body'] = json_encode($content);
+        $options['headers'] = [
             'Content-Type' => 'application/json',
-        );
+        ];
 
-        $response = $browser->put($url, $headers, json_encode($content));
+        $response = $browser->put($url, $options);
 
-        if($browser->getLastResponse()->getStatusCode() > 299) {
-            throw new BadRequestException($response);
+        if($response->getStatusCode() > 299) {
+            throw new BadRequestException($url . ': ' . (string)$response->getBody());
         }
 
-        return json_decode($response->getContent(), true);
+        return json_decode($response->getBody(), true);
     }
 
-    public function getCurlOptions()
+    public function getRequestOptions()
     {
-        return (array) $this->curlOptions;
+        return (array) $this->requestOptions;
     }
 
-    public function setCurlOptions( array $options )
+    public function setRequestOptions( array $options )
     {
-        $this->curlOptions = $options;
-    }
-
-    protected function getCurlInstance()
-    {
-        $curl = new Curl();
-
-        foreach( $this->getCurlOptions() as $option => $value )
-        {
-            $curl->setOption( $option, $value );
-        }
-
-        return $curl;
+        $this->requestOptions = $options;
     }
 
     protected function getBrowserInstance()
     {
         if( $this->browser === null )
         {
-            $this->browser = new Browser( $this->getCurlInstance() );
+            $this->browser = new \GuzzleHttp\Client();
         }
 
         return $this->browser;
     }
-} 
+}
