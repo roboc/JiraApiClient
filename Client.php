@@ -54,9 +54,7 @@ class Client
 
         $options = $this->getRequestOptions();
         $options['body'] = json_encode($content);
-        $options['headers'] = [
-            'Content-Type' => 'application/json',
-        ];
+        $options['headers']['Content-Type'] = 'application/json';
 
         $response = $browser->post($url, $options);
 
@@ -75,9 +73,7 @@ class Client
 
         $options = $this->getRequestOptions();
         $options['body'] = json_encode($content);
-        $options['headers'] = [
-            'Content-Type' => 'application/json',
-        ];
+        $options['headers']['Content-Type'] = 'application/json';
 
         $response = $browser->put($url, $options);
 
